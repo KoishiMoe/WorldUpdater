@@ -40,10 +40,10 @@ def main(path: str = '', backup: bool = True, dry_run: bool = False, update_1_20
     enabled_features: List[String] = data.get('enabled_features', List[String]())
 
     # Add vanilla datapack and features
-    if not enabled_features:
+    if 'minecraft:vanilla' not in enabled_features:
         print("Adding vanilla features...")
         enabled_features.append(String('minecraft:vanilla'))
-    if not enabled_packs:
+    if not ('minecraft:vanilla' in enabled_packs or 'vanilla' in enabled_packs):
         print("Adding vanilla datapack...")
         enabled_packs.append(String('vanilla'))
 
@@ -65,18 +65,18 @@ def main(path: str = '', backup: bool = True, dry_run: bool = False, update_1_20
             print('Adding "minecraft:bundle" to enabled_features...')
             enabled_features.append(String('minecraft:bundle'))
         if 'bundle' in disabled_packs:
-            print('Removing bundle from disabled datapacks...')
+            print('Removing "bundle" from disabled datapacks...')
             disabled_packs.remove('bundle')
         if 'bundle' not in enabled_packs:
-            print('Adding bundle to enabled datapacks...')
+            print('Adding "bundle" to enabled datapacks...')
             enabled_packs.append(String('bundle'))
 
     # Save the file
     if not dry_run:
         # Backup the file
         if backup:
-            backup_name = 'level.dat-{}.bak'. \
-                format(''.join(random.choice(string.ascii_uppercase) for i in range(5)))
+            backup_name = '{}-{}.bak'. \
+                format(os.path.basename(path), ''.join(random.choice(string.ascii_uppercase) for i in range(5)))
             f.save(os.path.join(os.path.dirname(path), backup_name))
             print('Backup saved as {}'.format(backup_name))
 
