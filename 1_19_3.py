@@ -13,7 +13,7 @@ import nbtlib
 from nbtlib.tag import Compound, List, String
 
 
-def main(path: str = '', backup: bool = True, dry_run: bool = False, update_1_20: bool = True, bundle: bool = True):
+def main(path: str = './', backup: bool = True, dry_run: bool = False, update_1_20: bool = True, bundle: bool = True):
     path = path if not os.path.isdir(path) else os.path.join(path, 'level.dat')
     try:
         f = nbtlib.load(path)  # we do not use the context manager here because it will automatically save the file
@@ -32,6 +32,18 @@ def main(path: str = '', backup: bool = True, dry_run: bool = False, update_1_20
     except KeyError:
         print("Seems like the file is corrupted or not a valid level.dat file.")
         return
+
+    # Backup the file
+    # Below we'll modify some tags. If we backup the file with the save() method after that,
+    # some tags like 'DataPacks' will be saved as the new value, which is not what we want.
+    if backup:
+        backup_name = '{}-{}.bak'. \
+            format(os.path.basename(path), ''.join(random.choice(string.ascii_uppercase) for i in range(5)))
+        if not dry_run:
+            f.save(os.path.join(os.path.dirname(path), backup_name))
+            print('Backup saved as {}'.format(backup_name))
+        else:
+            print('Backup would be saved as {}'.format(backup_name))
 
     # Get the data
     datapacks: Union[Compound, dict] = data.get('DataPacks', {})
@@ -73,13 +85,6 @@ def main(path: str = '', backup: bool = True, dry_run: bool = False, update_1_20
 
     # Save the file
     if not dry_run:
-        # Backup the file
-        if backup:
-            backup_name = '{}-{}.bak'. \
-                format(os.path.basename(path), ''.join(random.choice(string.ascii_uppercase) for i in range(5)))
-            f.save(os.path.join(os.path.dirname(path), backup_name))
-            print('Backup saved as {}'.format(backup_name))
-
         data['DataPacks'] = nbtlib.Compound({'Enabled': enabled_packs, 'Disabled': disabled_packs})
         data['enabled_features'] = enabled_features
         f.save()
@@ -90,7 +95,7 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description='Add 1.19.3\'s experimental features to a world.')
-    parser.add_argument('path', type=str, nargs='?', default='',
+    parser.add_argument('path', type=str, nargs='?', default='./',
                         help='The path to the level.dat file')
     parser.add_argument('--no-backup', dest='backup', action='store_false',
                         help='Do not backup the file')
